@@ -8,6 +8,7 @@ from pathlib import Path
 from flask import Flask, Response, jsonify, request
 from presidio_anonymizer import AnonymizerEngine, DeanonymizeEngine
 from presidio_anonymizer.entities import InvalidParamError
+from presidio_anonymizer.entities.engine import operator_config
 from presidio_anonymizer.services.app_entities_convertor import AppEntitiesConvertor
 from werkzeug.exceptions import BadRequest, HTTPException
 
@@ -44,6 +45,39 @@ class Server:
         def health() -> str:
             """Return basic health probe result."""
             return "Presidio Anonymizer service is up"
+
+        @self.app.route("/genz-preview")
+        def genz_preview() -> Response:
+            """Return genz preview result."""
+            sample_result = {
+                "example": "Call Emily at 577-988-1234",
+                "example output": "Call GOAT at vibe check",
+                "description": "Example output of the genz anonymizer."
+            }
+            return jsonify(sample_result)
+
+        @self.app.route("/genz")
+        def genz() -> Response:
+            """Return genz operator result."""
+            content = request.get_json()
+            if not content:
+                raise BadRequest("Invalid request json")
+
+            analyzer_results = AppEntitiesConvertor.analyzer_results_from_json(
+                content.get("analyzer_results")
+            )
+
+            anonymizers_config = {}
+            for result in content.get("analyzer_results"):
+                type = result.get("entity_type")
+                anonymizers_config[type]= operator_config.OperatorConfig("genz")
+
+            anoymizer_result = self.anonymizer.anonymize(
+                text=content.get("text", ""),
+                analyzer_results=analyzer_results,
+                operators=anonymizers_config,
+            )
+            return Response(anoymizer_result.to_json(), mimetype="application/json")
 
         @self.app.route("/anonymize", methods=["POST"])
         def anonymize() -> Response:
