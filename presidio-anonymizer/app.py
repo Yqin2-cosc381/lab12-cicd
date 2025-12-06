@@ -46,7 +46,7 @@ class Server:
             return "Presidio Anonymizer service is up"
 
         @self.app.route("/genz-preview")
-        def genz_preview() -> str:
+        def genz_preview() -> Response:
             """Return genz preview result."""
             sample_result = {
                 "example": "Call Emily at 577-988-1234",
@@ -54,6 +54,22 @@ class Server:
                 "description": "Example output of the genz anonymizer."
             }
             return jsonify(sample_result)
+
+        @self.app.route("/genz")
+        def genz() -> Response:
+            """Return genz operator result."""
+            content = request.get_json()
+            if not content:
+                raise BadRequest("Invalid request json")
+
+            analyzer_results = AppEntitiesConvertor.analyzer_results_from_json(
+                content.get("analyzer_results")
+            )
+            anoymizer_result = self.anonymizer.anonymize(
+                text=content.get("text", ""),
+                analyzer_results=analyzer_results,
+            )
+            return Response(anoymizer_result.to_json(), mimetype="application/json")
 
         @self.app.route("/anonymize", methods=["POST"])
         def anonymize() -> Response:

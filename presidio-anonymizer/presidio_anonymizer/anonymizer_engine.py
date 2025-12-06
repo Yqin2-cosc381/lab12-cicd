@@ -13,7 +13,7 @@ from presidio_anonymizer.entities import (
 )
 from presidio_anonymizer.operators import Operator, OperatorType
 
-DEFAULT = "replace"
+DEFAULT = "genz"
 
 logger = logging.getLogger("presidio-anonymizer")
 
