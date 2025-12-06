@@ -27,10 +27,6 @@ def test_given_anonymize_called_with_genz_then_expected_valid_response_returned(
     }
     """
     response_status, response_content, response_json = genz(request_body)
-    for item in response_json.get("items"):
-        start = item.get("start")
-        end = item.get("end")
-        type = item.get("entity_type")
 
     reponse_texts = response_json.get("text")
     index = reponse_texts.index("contact")
@@ -45,8 +41,6 @@ def test_given_anonymize_called_with_genz_then_expected_valid_response_returned(
     phone = reponse_texts[phone_start:phone_end]
 
     text1 = f"Please contact {name} at {phone} if you have questions about the workshop registration."
-    print(name)
-    print(phone)
     expected_response = f"""{{
         "text": "{text1}",
         "items": [
