@@ -3,8 +3,72 @@ import json
 import pytest
 
 from common.assertions import equal_json_strings
-from common.methods import anonymize, anonymizers, deanonymize
+from common.methods import anonymize, anonymizers, deanonymize, genz
 
+@pytest.mark.api
+def test_given_anonymize_called_with_genz_then_expected_valid_response_returned():
+    request_body = """
+    {
+        "text": "Please contact Emily Carter at 734-555-9284 if you have questions about the workshop registration.",
+        "analyzer_results": [
+            {
+                "start": 15,
+                "end": 27,
+                "score": 0.3,
+                "entity_type": "PERSON"
+            },
+            {
+                "start": 31,
+                "end": 43,
+                "score": 0.95,
+                "entity_type": "PHONE_NUMBER"
+            }
+        ]
+    }
+    """
+    response_status, response_content, response_json = genz(request_body)
+    for item in response_json.get("items"):
+        start = item.get("start")
+        end = item.get("end")
+        type = item.get("entity_type")
+
+    reponse_texts = response_json.get("text")
+    index = reponse_texts.index("contact")
+    index1 = reponse_texts.index("at")
+    index2 = reponse_texts.index("if")
+
+    name_start = index+len("contact")+1
+    name_end = index1-1
+    phone_start = index1+len("at")+1
+    phone_end = index2-1
+    name = reponse_texts[name_start:name_end]
+    phone = reponse_texts[phone_start:phone_end]
+
+    text1 = f"Please contact {name} at {phone} if you have questions about the workshop registration."
+    print(name)
+    print(phone)
+    expected_response = f"""{{
+        "text": "{text1}",
+        "items": [
+            {{
+                "start": {phone_start},
+                "end": {phone_end},
+                "entity_type": "PHONE_NUMBER",
+                "text": "{phone}",
+                "operator": "genz"
+            }},
+            {{
+                "start": {name_start},
+                "end": {name_end},
+                "entity_type": "PERSON",
+                "text": "{name}",
+                "operator": "genz"
+            }}
+        ]
+    }}"""
+    
+    assert response_status == 200
+    assert equal_json_strings(expected_response, response_content)
 
 @pytest.mark.api
 def test_given_anonymize_called_with_valid_request_then_expected_valid_response_returned():
