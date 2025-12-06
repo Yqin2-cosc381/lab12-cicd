@@ -44,7 +44,7 @@ class Server:
         def health() -> str:
             """Return basic health probe result."""
             return "Presidio Anonymizer service is up"
-        
+
         @self.app.route("/genz-preview")
         def genz_preview() -> str:
             """Return genz preview result."""
